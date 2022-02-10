@@ -33,28 +33,17 @@ public class App
         scanner.close();
        
         for (String[] row : dataTable) {
+            String toPrint = app.printThis(row, app);
+            if(toPrint.length() > 0){
+                System.out.println(toPrint);
 
-            String name = row[0];
-            String loanValue = row[1];
-            String interestRate = row[2];
-            String paymentTime = row[3];
-            double dloanValue = app.convertToNum(loanValue);
-            double dinterestRate = app.convertToNum(interestRate);
-            double dpaymentTime = app.convertToNum(paymentTime);
-            double payPerMonth = app.calculateMontlyPayment(dinterestRate, dloanValue, dpaymentTime);
-            String payPerMonthStr = Double.toString(payPerMonth);
-            int dotindex = payPerMonthStr.indexOf(".");
-            String finalstr = "";
-            for(int i = 0; i < dotindex+3; i++){
-                finalstr += payPerMonthStr.charAt(i);
             }
 
-            System.out.println(name+" wants to borrow "+ loanValue + " eur for a period of "+ paymentTime+ " years and pay "+finalstr+" eur each month");
            
         }
     }
 
-    private String[] parseLine(String line){
+    protected String[] parseLine(String line){
         String word = "";
         int wordindex = 0;
         String[] data = new String[4];
@@ -69,10 +58,6 @@ public class App
                     index++;
                 }
                 firstIsQuote = false;
-                // data[wordindex] = word;
-                // wordindex++;
-                // word = "";
-                // index++;
             }
             else{
                 while(index < line.length()){
@@ -94,13 +79,50 @@ public class App
                 }
             }
         }
-
+        for(int i = 0; i < data.length; i++){
+            if(data[i] == null || data[i].length() < 1){
+                data[i] = "Unknown";
+            }
+        }
         return data;
 
 
     }
 
-    private double convertToNum(String num){
+    protected String printThis(String[] dataRow,App app){
+        String name = dataRow[0];
+            if(name.contains("\"")){
+                name = name.replace("\"", "");
+
+            }
+            String loanValue = dataRow[1];
+            String interestRate = dataRow[2];
+            String paymentTime = dataRow[3];
+            boolean invalidString = false;
+            for (String s : dataRow) {
+                if(s == null || s.length() < 1){
+                    invalidString = true;
+                }
+            }
+            if(invalidString) return "";
+
+            double dloanValue = app.convertToNum(loanValue);
+            double dinterestRate = app.convertToNum(interestRate);
+            double dpaymentTime = app.convertToNum(paymentTime);
+            double payPerMonth = app.calculateMontlyPayment(dinterestRate, dloanValue, dpaymentTime);
+            String payPerMonthStr = Double.toString(payPerMonth);
+            int dotindex = payPerMonthStr.indexOf(".");
+            String finalstr = "";
+            for(int i = 0; i < dotindex+3; i++){
+                finalstr += payPerMonthStr.charAt(i);
+            }
+            String result = name+" wants to borrow "+ loanValue + " eur for a period of "+ paymentTime+ " years and pay "+finalstr+" eur each month";
+            
+            return result;
+    }
+
+
+    protected double convertToNum(String num){
         if(num.contains(".")){
             double result = Double.parseDouble(num);
             return result;
@@ -112,7 +134,7 @@ public class App
         }
     }
 
-    private double calculateMontlyPayment(double interest, double loanVal, double payTime){
+    protected double calculateMontlyPayment(double interest, double loanVal, double payTime){
         double numPayments = payTime*12;
         double monthlyInterest = (interest/100)/12;
         double partial = 1.0;
